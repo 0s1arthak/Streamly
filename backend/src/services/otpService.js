@@ -3,7 +3,7 @@ import { hashOtp } from "../utils/hash.js";
 import Otp from "../models/Otp.js";
 import { sendOtp } from "../providers/email.provider.js";
 
-export const generateAndSendOtp=async(user)=>{
+export const generateAndSendOtp=async(email)=>{
 
     // generating
     const value=generateSixDigitsOtp();
@@ -13,11 +13,11 @@ export const generateAndSendOtp=async(user)=>{
 
     // Generating model for otp
     const otpValue=await Otp.create({
-        email:user.email,
+        email:email,
         value:hashedOtp
     })
 
 
     // sending email through nodemailer
-    await sendOtp(user.email,value)
+    await sendOtp(email,otpValue)
 }
