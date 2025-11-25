@@ -9,7 +9,7 @@ export const generateAndSendOtp=async(email)=>{
     const value=generateSixDigitsOtp();
 
     // hashing
-    const hashedOtp=hashOtp(value);
+    const hashedOtp=await hashOtp(value);
 
     // Generating model for otp
     const otpValue=await Otp.create({
@@ -19,5 +19,5 @@ export const generateAndSendOtp=async(email)=>{
 
 
     // sending email through nodemailer
-    await sendOtp(email,otpValue)
+    await sendOtp(email,value)
 }
