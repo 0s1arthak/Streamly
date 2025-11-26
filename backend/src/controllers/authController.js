@@ -4,9 +4,13 @@ import { generateAndSendOtp } from "../services/otpService.js";
 import Otp from "../models/Otp.js";
 import { hashOtp } from "../utils/hash.js";
 import TempUser from "../models/TempUser.js";
+import dotenv from "dotenv"
+import jwt from "jsonwebtoken"
 
 
 // User will not be created until the otp is verified 
+
+dotenv.config();
 
 export const signup=async(req,res)=>{
     try {
@@ -89,6 +93,7 @@ export const verifyOtp=async(req,res)=>{
         await Otp.deleteOne({ email });
 
         console.log(user)
+        return res.status(200).json({message:"Otp verified successfully , log in to continue",email});
     } catch (error) {
         console.log(error);
         return res.status(500).json({message:`${error.message}`});
@@ -132,5 +137,41 @@ export const resendOtp=async(req,res)=>{
     } catch (error) {
         return res.status(500).json({message:error.message})
         
+    }
+}
+
+export const login=async(req,res)=>{
+    try {
+        const {email,password}=req.body
+
+        const existingUser=await User.findOne({email});
+
+        if(!existingUser){
+            return res.status(400).json({message:"User does not exist"});
+        }
+
+        const isMatch=await bcrypt.compare(password,existingUser.password);
+        console.log(isMatch)
+        if(!isMatch){
+            return res.status(400).json({
+                message:"Invalid email or password"
+            })
+        }
+        const token=jwt.sign(
+            {userId:existingUser._id,email:existingUser.email},
+            process.env.JWT_SECRET,
+            {expiresIn:"7d"}
+        );
+
+        return res.json({
+            message:"User logged in successfully",
+            token,
+            user:{
+                name:existingUser.name,
+                email:existingUser.email
+            }
+        })
+    } catch (error) {
+        return res.status(500).json({message:error.message})
     }
 }
