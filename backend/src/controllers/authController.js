@@ -163,6 +163,8 @@ export const login=async(req,res)=>{
             {expiresIn:"7d"}
         );
 
+        console.log(token);
+
         return res.json({
             message:"User logged in successfully",
             token,

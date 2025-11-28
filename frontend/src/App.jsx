@@ -4,16 +4,38 @@ import Signup from "./pages/Signup";
 import VerifyOtp from "./pages/VerifyOtp";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import PublicRoute from "./routes/PublicRoute";
+import PrivateRoute from "./routes/PrivateRoute";
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard/>}/>
+        <Route path="/" element={
+            <PublicRoute>
+              <Home />
+            </PublicRoute>
+        } />
+        <Route path="/signup" element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+        } />
+        <Route path="/verify-otp" element={
+          <PublicRoute>
+            <VerifyOtp />
+          </PublicRoute>
+        } />
+        <Route path="/login" element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+        } />
+        <Route path="/dashboard" element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+        }/>
       </Routes>
     </Router>
   );
