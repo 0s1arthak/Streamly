@@ -13,27 +13,44 @@ The repository implements a secure signup flow using email OTPs and prepares the
 
 ## Features (Current Status)
 
-### ✅ Authentication System (Implemented)
+### ✅ Authentication System (Fully Implemented)
 - **Signup with OTP verification**: Users register with name, email and password. Registration completes only after verifying an OTP sent to the provided email.
 - **Temporary user storage**: New signups are stored in a `TempUser` collection until OTP verification completes.
 - **Hashed passwords**: Passwords are hashed with `bcrypt` before being stored (even in `TempUser`).
 - **OTP model & service**: OTPs are generated, hashed, saved to the `Otp` collection and sent via Nodemailer. OTPs are deleted after use or expiry.
 - **Resend OTP**: `resendOtp` endpoint re-generates and sends a new OTP if the temporary signup is still valid.
 - **User creation upon verification**: `verifyOtp` verifies the OTP, creates a permanent `User` record using hashed password from `TempUser`, then deletes `TempUser` and its `Otp` record.
+- **Login functionality**: Users can log in with email and password to receive a JWT token.
+- **Logout functionality**: Clears user session/token on the frontend.
+
+### ✅ Video Upload & Processing (Implemented)
+- **Video upload**: Users upload video files which are stored in `uploads/raw/` and indexed in MongoDB
+- **Video metadata**: Video records store title, description, user reference, thumbnail path, HLS stream URL, and processing status
+- **HLS streaming**: Videos are automatically converted to multiple quality levels (360p, 480p, 720p) using FFmpeg
+- **Master playlist generation**: Creates adaptive bitrate streaming manifest (`master.m3u8`) for quality adaptation
+- **Thumbnail generation**: Automatic snapshot extraction from uploaded videos at 50% mark
+- **Video retrieval**: Endpoints to fetch all videos and individual video details by ID
 
 ### 🔧 Backend Infrastructure
 - Express.js server with CORS and JSON parsing
 - MongoDB (Mongoose) connection and models
 - Environment configuration with `dotenv`
 - Email provider using Nodemailer
+- File upload handling with multer middleware
+- Authentication middleware for protected routes
 
-### 📁 Upload & Storage (Scaffolded)
-- Upload directories created: `uploads/raw`, `uploads/hls`, `uploads/thumbnails`
-- `fluent-ffmpeg` is available for encoding / HLS packaging
+### 📁 Upload & Storage (Implemented)
+- **Raw uploads**: `uploads/raw/` - stores original uploaded video files
+- **HLS streams**: `uploads/hls/{videoId}/` - contains adaptive bitrate playlists (360p.m3u8, 480p.m3u8, 720p.m3u8) and segment files (.ts)
+- **Thumbnails**: `uploads/thumbnails/` - stores generated video thumbnails as JPG images
 
 ### 🎨 Frontend Setup
 - React 19 + Vite
 - ESLint configuration
+- **Authentication pages**: Login, Signup, OTP Verification
+- **Protected routes**: Dashboard page accessible only to authenticated users
+- **Public routes**: Home page accessible to all users
+- **Route protection**: PrivateRoute and PublicRoute components for conditional rendering
 
 ## Project Structure
 
@@ -135,21 +152,43 @@ npm install
 npm run dev
 ```
 
-## API Endpoints (Auth)
+## API Endpoints
 
-Base: `/api/auth`
+### Authentication Routes (`/api/auth`)
 
 - `POST /signup` — create a temporary signup and send OTP
   - Body: `{ name, email, password, confirmPassword }`
+  - Response: `{ message, email }`
 
 - `POST /verifyOtp` — verify an OTP and finalize user creation
   - Body: `{ email, otp }`
+  - Response: User created successfully
   - Behavior: If OTP matches the stored hashed OTP, the server creates a `User` from `TempUser`, then deletes both the `TempUser` and the `Otp` record.
 
 - `POST /resendOtp` — resend a new OTP to the email if the signup session still exists
   - Body: `{ email }`
+  - Response: `{ message, email }`
 
-> Note: Endpoint names are implemented in `authController.js` as `signup`, `verifyOtp`, and `resendOtp` respectively.
+- `POST /login` — authenticate user with email and password
+  - Body: `{ email, password }`
+  - Response: JWT token for authenticated requests
+
+- `POST /logout` — clear user session (frontend-side)
+  - Response: Logout confirmation
+
+### Video Routes (`/api/video`)
+
+- `POST /upload` — upload and process a video file (requires authentication)
+  - Headers: `Authorization: Bearer {token}`
+  - Body: FormData with `title`, `description`, and video file
+  - Response: `{ message: "Uploaded. Processing started.", video }`
+  - Processing: Video is converted to HLS (360p, 480p, 720p), thumbnail is generated, and master playlist is created
+
+- `GET /` — retrieve all videos
+  - Response: Array of video objects sorted by creation date (newest first)
+
+- `GET /:id` — retrieve a specific video by ID
+  - Response: `{ video: {...} }`
 
 ## Authentication Flow (Detailed)
 
@@ -168,16 +207,30 @@ Base: `/api/auth`
 - `TempUser` lifecycle and hashed-password storage
 - OTP hashing, storage and deletion on success
 - Resend OTP functionality
+- User login with JWT token generation
+- User logout functionality
+- Video model with metadata fields (title, description, thumbnail, videoUrl, status)
+- Video upload with multer middleware
+- HLS streaming with multi-quality encoding (360p, 480p, 720p)
+- Automatic thumbnail generation from videos
+- Master playlist creation for adaptive bitrate streaming
+- Video retrieval endpoints (all videos and by ID)
+- Frontend authentication pages (Login, Signup, OTP Verification)
+- Frontend dashboard with route protection (private routes)
+- Public and private route components for conditional access
 
 ### 🚧 In Progress
-- Video model & controller (`Video.js` is currently empty and `videoController.js` is a work-in-progress)
-- File uploads and HLS packaging
-- Frontend pages for video upload/playback and authenticated dashboards
+- Video playback interface with HLS player
+- User profile management
+- Video deletion and editing capabilities
+- Search and filtering functionality
+- User dashboard showing uploaded videos
 
 ### 📋 Planned
-- Video playback with adaptive streaming (HLS)
-- Thumbnails generation and storage
-- User profiles and video management (delete/edit)
+- Social features (comments, likes, shares)
+- Video recommendations based on viewing history
+- User subscriptions/follows
+- Video analytics and view tracking
 
 ## Environment Variables
 
@@ -201,7 +254,35 @@ FRONTEND_URL
 ## Notes & Next Steps
 
 - The authentication implementation expects the frontend to store the signup email (e.g., in component state or localStorage) so the OTP page can send the email + OTP for verification.
-- `Video.js` and `videoController.js` are the immediate next tasks: implement the Video schema, upload endpoints, FFmpeg processing and HLS packaging.
+- Video processing happens asynchronously after upload confirmation. The client receives an immediate response with `status: "processing"`.
+- HLS segments are stored on disk in `uploads/hls/{videoId}/` directory structure for efficient streaming.
+- FFmpeg encoding produces `.ts` (transport stream) segment files and `.m3u8` playlist manifests for each quality level.
+- **Next task**: Build a video playback component using an HLS-capable player (e.g., hls.js) to stream the encoded videos.
+
+## Video Processing Details
+
+### HLS Encoding Flow
+1. User uploads a video file → stored in `uploads/raw/`
+2. Backend generates a unique `videoId` (timestamp-based) for organization
+3. FFmpeg processes the video to create three quality variants:
+   - **360p** (640×360) → bandwidth ~800 kbps
+   - **480p** (854×480) → bandwidth ~1400 kbps
+   - **720p** (1280×720) → bandwidth ~2800 kbps
+4. Each quality produces:
+   - `.m3u8` playlist file (manifest)
+   - Multiple `.ts` segment files (6-second chunks)
+5. A `master.m3u8` file is created for adaptive bitrate streaming
+6. Thumbnail is extracted at the 50% mark of the video
+7. All metadata is saved to the `Video` model with status `"completed"`
+
+### Example Video Upload Request
+```bash
+curl -X POST http://localhost:5000/api/video/upload \
+  -H "Authorization: Bearer {JWT_TOKEN}" \
+  -F "title=My Video Title" \
+  -F "description=Video description here" \
+  -F "file=@path/to/video.mp4"
+```
 
 ## License
 
@@ -213,5 +294,11 @@ ISC
 
 ---
 
-**Last Updated**: December 5, 2025
+**Last Updated**: December 5, 2025  
 **Current Branch**: `feat/Authentication`
+
+### Recent Commits
+- Implement video processing functionality: add video upload, retrieval, and processing services with HLS support
+- Implement video upload functionality with multer, add video model and routes, and enhance authentication with public/private route handling
+- Add logout functionality
+- Implement login functionality, add basic routing for Home, Signup, Login, Verify OTP, and Dashboard pages
