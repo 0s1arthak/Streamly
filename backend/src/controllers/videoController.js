@@ -2,6 +2,7 @@ import Video from "../models/Video.js";
 import ffmpeg from "fluent-ffmpeg"
 import path from "path"
 import fs from "fs"
+import { processVideo } from "../services/videoService.js";
 
 // We will go step by step first we will only upload video and create a record in db for that video 
 // Always keep in mind when we are saying we are saving video in db , it only means that we are storing
@@ -26,6 +27,12 @@ import fs from "fs"
 
 // Controller will have access to raw path of file using req.file.path
 
+export const videos=async(req,res)=>{
+    const videos=await Video.find().sort({createdAt:-1});
+    console.log(videos);
+    res.json(videos);
+}
+
 
 export const uploadVideo=async(req,res)=>{
     try {
@@ -46,11 +53,8 @@ export const uploadVideo=async(req,res)=>{
         // hls folder for video naming
         const videoId=Date.now().toString();
 
-        // folder where this file will go
-        const hlsFolder=`/uploads/hls/${videoId}`;
-
-        // thumbnail path 
-        const thumbPath=`/uploads/thumbnails/${videoId}.jpg`
+        const hlsFolder = path.join("uploads", "hls", videoId);
+        const thumbPath = path.join("uploads", "thumbnails", `${videoId}.jpg`);
 
 
         fs.mkdirSync(hlsFolder, { recursive: true });
@@ -65,8 +69,21 @@ export const uploadVideo=async(req,res)=>{
             status:"processing"
         })
 
+        // Process the video using service
+        processVideo(rawPath,hlsFolder,thumbPath,newVideo._id);
+
         return res.status(200).json({message:"Uploaded. Processing started.",video:newVideo});
     } catch (error) {
         return res.status(500).json({message:error.message});
+    }
+}
+
+
+export const getVideoById=async(req,res)=>{
+    try {
+        const video=await Video.findById(req.params.id);
+        return res.json({video});
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
     }
 }
