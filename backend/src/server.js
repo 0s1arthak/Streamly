@@ -3,6 +3,7 @@ import dotenv from "dotenv"
 import cors from "cors"
 import connectDB from "./config/db.js"
 import authRoutes from "./routes/authRoutes.js"
+import videoRoutes from "./routes/videoRoutes.js"
 
 
 dotenv.config()
@@ -15,6 +16,9 @@ app.use(express.json())
 
 // Attaching auth routes
 app.use("/api/auth",authRoutes)
+
+// Attaching video routes
+app.use("/api/videos",videoRoutes);
 
 
 

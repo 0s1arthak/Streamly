@@ -1,6 +1,6 @@
-# Streamly
+ # Streamly
 
-A video streaming platform with authentication and HLS video processing capabilities. This project is currently in development with focus on the authentication system and video infrastructure.
+A video streaming platform in active development. The project currently focuses on a secure, OTP-based authentication flow and scaffolding for video upload and HLS streaming.
 
 ## Project Overview
 
@@ -9,38 +9,31 @@ Streamly is a full-stack video streaming application built with:
 - **Backend**: Express.js with MongoDB
 - **Current Branch**: `feat/Authentication`
 
-The project implements a secure user authentication system with OTP verification and is preparing the infrastructure for video storage and HLS streaming.
+The repository implements a secure signup flow using email OTPs and prepares the backend for video processing (FFmpeg/HLS).
 
 ## Features (Current Status)
 
-### ✅ Authentication System
-- **User Registration** with email verification via OTP
-- **Email-based OTP Verification** for secure signup
-- **Password Hashing** using bcrypt for security
-- **Temporary User Model** to hold signup data until OTP verification
-- **OTP Expiration Management** with automatic cleanup
-- **Resend OTP** functionality for expired codes
-- **JWT Token Generation** ready for authenticated endpoints
+### ✅ Authentication System (Implemented)
+- **Signup with OTP verification**: Users register with name, email and password. Registration completes only after verifying an OTP sent to the provided email.
+- **Temporary user storage**: New signups are stored in a `TempUser` collection until OTP verification completes.
+- **Hashed passwords**: Passwords are hashed with `bcrypt` before being stored (even in `TempUser`).
+- **OTP model & service**: OTPs are generated, hashed, saved to the `Otp` collection and sent via Nodemailer. OTPs are deleted after use or expiry.
+- **Resend OTP**: `resendOtp` endpoint re-generates and sends a new OTP if the temporary signup is still valid.
+- **User creation upon verification**: `verifyOtp` verifies the OTP, creates a permanent `User` record using hashed password from `TempUser`, then deletes `TempUser` and its `Otp` record.
 
 ### 🔧 Backend Infrastructure
-- Express.js server with CORS support
-- MongoDB database integration
-- Environment configuration with dotenv
-- Structured controllers, routes, and middleware
-- Email provider for OTP delivery (Nodemailer)
-- User and OTP models with schema validation
+- Express.js server with CORS and JSON parsing
+- MongoDB (Mongoose) connection and models
+- Environment configuration with `dotenv`
+- Email provider using Nodemailer
 
-### 📁 Upload & Storage System
-- Directory structure for video uploads:
-  - `raw/` - Original uploaded videos
-  - `hls/` - HLS-encoded video files for streaming
-  - `thumbnails/` - Video thumbnails
-- FFmpeg integration for video processing
+### 📁 Upload & Storage (Scaffolded)
+- Upload directories created: `uploads/raw`, `uploads/hls`, `uploads/thumbnails`
+- `fluent-ffmpeg` is available for encoding / HLS packaging
 
 ### 🎨 Frontend Setup
-- React 19 with Vite build tool
-- ESLint configuration for code quality
-- Modern JavaScript (ES modules)
+- React 19 + Vite
+- ESLint configuration
 
 ## Project Structure
 
@@ -49,235 +42,166 @@ streamly/
 ├── backend/
 │   ├── src/
 │   │   ├── server.js              # Main Express server
-│   │   ├── config/
-│   │   │   └── db.js              # MongoDB connection
+│   │   ├── config/db.js           # MongoDB connection
 │   │   ├── controllers/
-│   │   │   ├── authController.js  # Authentication logic
+│   │   │   ├── authController.js  # Signup, verifyOtp, resendOtp
 │   │   │   └── videoController.js # Video handling (WIP)
 │   │   ├── middleware/
-│   │   │   ├── authmiddleware.js  # JWT verification
-│   │   │   └── upload.js          # File upload handling
+│   │   │   ├── authmiddleware.js  # JWT verification (used by protected routes)
+│   │   │   └── upload.js          # File upload handling (scaffold)
 │   │   ├── models/
 │   │   │   ├── User.js            # User schema
 │   │   │   ├── Otp.js             # OTP schema
-│   │   │   ├── TempUser.js        # Temporary user during signup
-│   │   │   └── Video.js           # Video schema (Empty - WIP)
+│   │   │   ├── TempUser.js        # Temporary signup storage
+│   │   │   └── Video.js           # Video schema (empty / WIP)
 │   │   ├── providers/
-│   │   │   └── email.provider.js  # Email service
+│   │   │   └── email.provider.js  # Email sending logic
 │   │   ├── routes/
-│   │   │   ├── authRoutes.js      # Auth endpoints
+│   │   │   ├── authRoutes.js      # Auth endpoints (signup, verifyOtp, resendOtp)
 │   │   │   └── videoRoutes.js     # Video endpoints (WIP)
 │   │   ├── services/
 │   │   │   └── otpService.js      # OTP generation & sending
 │   │   └── utils/
 │   │       ├── generateToken.js   # JWT token creation
-│   │       ├── hash.js            # Hashing utilities
+│   │       ├── hash.js            # Hash utilities for OTP
 │   │       └── random.js          # Random generation utilities
 │   ├── uploads/
-│   │   ├── raw/                   # Raw video files
-│   │   ├── hls/                   # HLS-encoded streams
-│   │   └── thumbnails/            # Video thumbnails
+│   │   ├── raw/                   # Raw uploaded video files
+│   │   ├── hls/                   # HLS-encoded output
+│   │   └── thumbnails/            # Generated thumbnails
 │   └── package.json
 │
 └── frontend/
     ├── src/
-    │   ├── main.jsx
-    │   ├── App.jsx
-    │   ├── App.css
-    │   ├── index.css
-    │   └── assets/
     ├── public/
     ├── index.html
     ├── vite.config.js
-    ├── eslint.config.js
     └── package.json
 ```
 
 ## Tech Stack
 
 ### Backend
-- **Runtime**: Node.js with ES Modules
-- **Framework**: Express.js v5.1.0
-- **Database**: MongoDB with Mongoose v8.19.4
-- **Authentication**: JWT + bcrypt
-- **Email**: Nodemailer v7.0.10
-- **Video Processing**: fluent-ffmpeg v2.1.3
-- **Dev Tool**: Nodemon v3.1.11
+- **Node.js** (ES Modules)
+- **Express.js**
+- **MongoDB** with Mongoose
+- **bcrypt** for password hashing
+- **jsonwebtoken** for auth tokens
+- **nodemailer** for sending OTP emails
+- **fluent-ffmpeg** for video processing
 
 ### Frontend
-- **Framework**: React v19.2.0
-- **Build Tool**: Vite v7.2.2
-- **State Management**: React Hooks (ready to implement)
-- **Linting**: ESLint v9.39.1
+- **React** with Vite
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB instance
-- SMTP credentials for email sending
+- Node.js (v16+ recommended)
+- MongoDB connection string
+- SMTP credentials (for email OTPs)
 
-### Backend Setup
+### Backend
 
-1. Navigate to the backend directory:
-```bash
+1. Install dependencies:
+
+```powershell
 cd backend
-```
-
-2. Install dependencies:
-```bash
 npm install
 ```
 
-3. Create a `.env` file with the following variables:
+2. Create a `.env` with at least:
+
 ```
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
 SALT_ROUNDS=10
 JWT_SECRET=your_jwt_secret
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASSWORD=your_app_password
+EMAIL_USER=your_email@example.com
+EMAIL_PASSWORD=your_email_password_or_app_password
 FRONTEND_URL=http://localhost:5173
 ```
 
-4. Start the development server:
-```bash
+3. Run dev server:
+
+```powershell
 npm run dev
 ```
 
-The backend will run on `http://localhost:5000`
+### Frontend
 
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-```bash
+```powershell
 cd frontend
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Start the development server:
-```bash
 npm run dev
 ```
 
-The frontend will run on `http://localhost:5173`
+## API Endpoints (Auth)
 
-## Current API Endpoints
+Base: `/api/auth`
 
-### Authentication Routes (`/api/auth`)
+- `POST /signup` — create a temporary signup and send OTP
+  - Body: `{ name, email, password, confirmPassword }`
 
-- **POST** `/signup` - Register a new user
-  - Request: `{ name, email, password, confirmPassword }`
-  - Response: OTP sent to email
+- `POST /verifyOtp` — verify an OTP and finalize user creation
+  - Body: `{ email, otp }`
+  - Behavior: If OTP matches the stored hashed OTP, the server creates a `User` from `TempUser`, then deletes both the `TempUser` and the `Otp` record.
 
-- **POST** `/verify-otp` - Verify OTP and complete registration
-  - Request: `{ email, otp }`
-  - Response: User created successfully
+- `POST /resendOtp` — resend a new OTP to the email if the signup session still exists
+  - Body: `{ email }`
 
-- **POST** `/resend-otp` - Resend OTP to email
-  - Request: `{ email }`
-  - Response: New OTP sent
+> Note: Endpoint names are implemented in `authController.js` as `signup`, `verifyOtp`, and `resendOtp` respectively.
 
-## Authentication Flow
+## Authentication Flow (Detailed)
 
-1. User provides name, email, password during signup
-2. Backend hashes password and stores user data in TempUser collection
-3. OTP is generated and sent to user's email via Nodemailer
-4. User enters OTP from email
-5. Backend verifies OTP against database
-6. If valid, TempUser is moved to User collection
-7. TempUser and OTP records are deleted
-8. User can now login with credentials
+1. Client calls `POST /api/auth/signup` with signup details.
+2. Backend hashes the password and saves a `TempUser` record.
+3. Backend generates a numeric OTP, hashes it, saves a hashed value in `Otp`, and emails the numeric OTP to the user.
+4. Client collects the OTP from the user and calls `POST /api/auth/verifyOtp`.
+5. Backend compares the provided OTP (after string conversion) with the hashed value stored in `Otp` using `bcrypt.compare`.
+6. On success, backend creates a permanent `User` record using the hashed password from `TempUser`, then deletes `TempUser` and `Otp` documents.
+7. On expired or missing `TempUser`, `resendOtp` or re-signup is required.
 
 ## Development Status
 
 ### ✅ Completed
-- Authentication system with OTP verification
-- User model and schema
-- Email service integration
-- Password hashing and security
-- Temporary user management
-- OTP expiration handling
+- Two-step email OTP signup flow (signup → verifyOtp)
+- `TempUser` lifecycle and hashed-password storage
+- OTP hashing, storage and deletion on success
+- Resend OTP functionality
 
 ### 🚧 In Progress
-- Video upload and processing
-- HLS streaming setup
-- Video model and schema
-- Video controller implementation
-- Authentication middleware integration
+- Video model & controller (`Video.js` is currently empty and `videoController.js` is a work-in-progress)
+- File uploads and HLS packaging
+- Frontend pages for video upload/playback and authenticated dashboards
 
 ### 📋 Planned
-- Video playback interface
-- User dashboard
-- Video library management
-- Streaming quality adaptation
-- Video recommendations
-- Social features (comments, likes)
+- Video playback with adaptive streaming (HLS)
+- Thumbnails generation and storage
+- User profiles and video management (delete/edit)
 
 ## Environment Variables
 
-Required environment variables in `.env`:
+Required:
 
 ```
-PORT                 # Server port (default: 5000)
-MONGODB_URI          # MongoDB connection string
-SALT_ROUNDS          # Bcrypt salt rounds
-JWT_SECRET           # Secret for JWT token signing
-EMAIL_USER           # Email account for sending OTPs
-EMAIL_PASSWORD       # Email account password/app password
-FRONTEND_URL         # Frontend URL for CORS
+PORT
+MONGODB_URI
+SALT_ROUNDS
+JWT_SECRET
+EMAIL_USER
+EMAIL_PASSWORD
+FRONTEND_URL
 ```
 
 ## Scripts
 
-### Backend
-- `npm run dev` - Start development server with hot reload
+- Backend: `npm run dev` (nodemon)
+- Frontend: `npm run dev`, `npm run build`, `npm run lint`, `npm run preview`
 
-### Frontend
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run lint` - Run ESLint
-- `npm run preview` - Preview production build
+## Notes & Next Steps
 
-## Dependencies Overview
-
-### Backend Dependencies
-- **express**: Web framework
-- **mongoose**: MongoDB ODM
-- **bcrypt**: Password hashing
-- **jsonwebtoken**: JWT authentication
-- **nodemailer**: Email sending
-- **fluent-ffmpeg**: Video processing
-- **cors**: Cross-origin resource sharing
-- **dotenv**: Environment variable management
-
-### Frontend Dependencies
-- **react**: UI library
-- **react-dom**: React DOM binding
-
-## Notes
-
-- The project uses a two-step signup process with email verification for enhanced security
-- Video model is ready but implementation is pending
-- Video controller exists but needs development
-- The upload directory structure is prepared for HLS streaming
-- FFmpeg is integrated for video encoding (ready to be used in video controller)
-
-## Future Enhancements
-
-- Implement video upload and processing
-- Setup HLS streaming infrastructure
-- Add video playback components
-- Implement user authentication middleware
-- Add refresh token mechanism
-- Setup video thumbnails generation
-- Add video quality variants for adaptive streaming
-- Implement video deletion and management
-- Add user profile management
+- The authentication implementation expects the frontend to store the signup email (e.g., in component state or localStorage) so the OTP page can send the email + OTP for verification.
+- `Video.js` and `videoController.js` are the immediate next tasks: implement the Video schema, upload endpoints, FFmpeg processing and HLS packaging.
 
 ## License
 
@@ -289,5 +213,5 @@ ISC
 
 ---
 
-**Last Updated**: November 26, 2025  
+**Last Updated**: December 5, 2025
 **Current Branch**: `feat/Authentication`

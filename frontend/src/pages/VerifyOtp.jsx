@@ -4,6 +4,12 @@ import { useNavigate } from "react-router-dom";
 function VerifyOtp() {
   const navigate = useNavigate();
   const email = localStorage.getItem("signupEmail");
+  useEffect(() => {
+    const email = localStorage.getItem("tempEmail");
+    if (!email) {
+      navigate("/signup"); // user skipped signup → redirect
+    }
+  }, []);
 
   const [otp, setOtp] = useState("");
 
