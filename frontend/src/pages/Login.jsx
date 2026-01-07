@@ -1,17 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Login() {
+const Login = () => {
   const navigate = useNavigate();
+  const [form, setForm] = useState({ email: "", password: "" });
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleLogin = async () => {
     try {
@@ -25,44 +20,55 @@ function Login() {
 
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        alert("Login successful");
-        navigate("/dashboard"); // later change to dashboard/videos page
+        navigate("/dashboard");
       } else {
         alert(data.message);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert("Login failed");
     }
   };
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h2>Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md">
+        <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
 
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        value={form.email}
-        onChange={handleChange}
-      /><br />
+        <input
+          className="w-full mb-4 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          type="email"
+          name="email"
+          placeholder="Email"
+          onChange={handleChange}
+        />
 
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        value={form.password}
-        onChange={handleChange}
-      /><br />
+        <input
+          className="w-full mb-6 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          type="password"
+          name="password"
+          placeholder="Password"
+          onChange={handleChange}
+        />
 
-      <button onClick={handleLogin}>Login</button>
-      <p>Don't have an account?</p>
-      <button onClick={() => navigate("/signup")}>
-        Sign Up
-      </button>
+        <button
+          onClick={handleLogin}
+          className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+        >
+          Login
+        </button>
+
+        <p className="text-center text-sm mt-4">
+          Don’t have an account?{" "}
+          <span
+            onClick={() => navigate("/signup")}
+            className="text-indigo-600 cursor-pointer hover:underline"
+          >
+            Sign Up
+          </span>
+        </p>
+      </div>
     </div>
   );
-}
+};
 
 export default Login;
