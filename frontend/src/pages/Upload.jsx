@@ -55,44 +55,44 @@ const Upload = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-lg p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center p-6">
+      <div className="w-full max-w-lg bg-white/20 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/30">
         
-        <h1 className="text-2xl font-bold mb-6 text-center">
+        <h1 className="text-3xl font-bold mb-8 text-center text-white drop-shadow-lg">
           Upload Video
         </h1>
 
         {error && (
-          <div className="mb-4 text-red-600 text-sm text-center">
+          <div className="mb-6 bg-red-500/20 backdrop-blur-md text-red-100 text-sm text-center p-4 rounded-2xl border border-red-400/50">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-semibold mb-2 text-white drop-shadow-md">
               Title
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-white/10 backdrop-blur-md border border-white/30 rounded-xl px-4 py-3 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
               placeholder="Enter video title"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-semibold mb-2 text-white drop-shadow-md">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-white/10 backdrop-blur-md border border-white/30 rounded-xl px-4 py-3 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300 resize-none"
               placeholder="Optional description"
               rows={3}
             />
@@ -100,35 +100,37 @@ const Upload = () => {
 
           {/* Video file */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-semibold mb-2 text-white drop-shadow-md">
               Video File
             </label>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={(e) => setVideo(e.target.files[0])}
-              className="w-full"
-            />
+            <div className="relative">
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => setVideo(e.target.files[0])}
+                className="w-full bg-white/10 backdrop-blur-md border border-white/30 rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-purple-500 file:to-pink-500 file:text-white hover:file:from-purple-600 hover:file:to-pink-600 transition-all duration-300"
+              />
+            </div>
           </div>
 
           {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2 rounded text-white font-medium transition ${
+            className={`w-full py-4 rounded-xl text-white font-bold text-lg shadow-lg transform hover:scale-105 transition-all duration-300 ${
               loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700"
+                ? "bg-gray-400/50 cursor-not-allowed backdrop-blur-md"
+                : "bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600"
             }`}
           >
-            {loading ? "Uploading..." : "Upload"}
+            {loading ? "Uploading..." : "Upload Video"}
           </button>
 
           {/* Back */}
           <button
             type="button"
             onClick={() => navigate("/dashboard")}
-            className="w-full text-sm text-gray-500 hover:underline mt-2"
+            className="w-full text-sm text-white/80 hover:text-white hover:underline mt-4 transition-colors duration-300"
           >
             Back to Dashboard
           </button>

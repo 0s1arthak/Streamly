@@ -46,9 +46,11 @@ The repository implements a secure signup flow using email OTPs and prepares the
 
 ### 🎨 Frontend Setup
 - React 19 + Vite
+- Tailwind CSS for styling
 - ESLint configuration
 - **Authentication pages**: Login, Signup, OTP Verification
-- **Protected routes**: Dashboard page accessible only to authenticated users
+- **Video pages**: Upload form with file handling, Watch page with HLS video player
+- **Protected routes**: Dashboard and Upload pages accessible only to authenticated users
 - **Public routes**: Home page accessible to all users
 - **Route protection**: PrivateRoute and PublicRoute components for conditional rendering
 
@@ -90,6 +92,20 @@ streamly/
 │
 └── frontend/
     ├── src/
+    │   ├── pages/
+    │   │   ├── Home.jsx
+    │   │   ├── Signup.jsx
+    │   │   ├── Login.jsx
+    │   │   ├── VerifyOtp.jsx
+    │   │   ├── Dashboard.jsx
+    │   │   ├── Upload.jsx
+    │   │   └── Watch.jsx
+    │   ├── routes/
+    │   │   ├── PrivateRoute.jsx
+    │   │   └── PublicRoute.jsx
+    │   ├── App.jsx
+    │   ├── main.jsx
+    │   └── index.css
     ├── public/
     ├── index.html
     ├── vite.config.js
@@ -109,6 +125,8 @@ streamly/
 
 ### Frontend
 - **React** with Vite
+- **Tailwind CSS** for styling
+- **hls.js** for HLS video streaming
 
 ## Getting Started
 
@@ -217,10 +235,12 @@ npm run dev
 - Video retrieval endpoints (all videos and by ID)
 - Frontend authentication pages (Login, Signup, OTP Verification)
 - Frontend dashboard with route protection (private routes)
+- Video upload page with form handling and error management
+- Video watch page with HLS player integration (hls.js)
+- Tailwind CSS integration for consistent styling
 - Public and private route components for conditional access
 
 ### 🚧 In Progress
-- Video playback interface with HLS player
 - User profile management
 - Video deletion and editing capabilities
 - Search and filtering functionality
@@ -257,7 +277,7 @@ FRONTEND_URL
 - Video processing happens asynchronously after upload confirmation. The client receives an immediate response with `status: "processing"`.
 - HLS segments are stored on disk in `uploads/hls/{videoId}/` directory structure for efficient streaming.
 - FFmpeg encoding produces `.ts` (transport stream) segment files and `.m3u8` playlist manifests for each quality level.
-- **Next task**: Build a video playback component using an HLS-capable player (e.g., hls.js) to stream the encoded videos.
+- Video playback is implemented using hls.js for cross-browser HLS streaming support, with fallback for Safari's native HLS player.
 
 ## Video Processing Details
 
@@ -294,11 +314,17 @@ ISC
 
 ---
 
-**Last Updated**: December 5, 2025  
+**Last Updated**: January 15, 2026  
 **Current Branch**: `feat/Authentication`
 
 ### Recent Commits
+- feat: add Watch page for video playback and integrate video fetching logic
+- feat: implement video upload feature with form handling and navigation
+- feat: integrate Tailwind CSS and refactor styles across components
+- Update README.md: Enhance authentication and video processing features, clarify implementation status and API endpoints
 - Implement video processing functionality: add video upload, retrieval, and processing services with HLS support
+- Update README.md: Enhance project overview and features for authentication system
 - Implement video upload functionality with multer, add video model and routes, and enhance authentication with public/private route handling
-- Add logout functionality
+- add logout functionality
 - Implement login functionality, add basic routing for Home, Signup, Login, Verify OTP, and Dashboard pages
+- Add README.md with project overview, features, setup instructions, and tech stack details
