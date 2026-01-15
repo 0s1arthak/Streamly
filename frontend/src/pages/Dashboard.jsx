@@ -59,38 +59,21 @@ const Dashboard = () => {
             <div
               key={video._id}
               className="bg-white rounded shadow hover:shadow-lg transition cursor-pointer"
-              onClick={() => {
-                if (video.status === "ready") {
-                  navigate(`/watch/${video._id}`);
-                }
-              }}
+              onClick={() => navigate(`/watch/${video._id}`)}
             >
-              {/* Thumbnail */}
               <img
                 src={`http://localhost:5000/${video.thumbnail}`}
                 alt={video.title}
                 className="w-full h-40 object-cover rounded-t"
               />
 
-              {/* Video Info */}
               <div className="p-4">
                 <h3 className="font-semibold text-lg truncate">
                   {video.title}
                 </h3>
-
-                <p
-                  className={`mt-2 text-sm font-medium ${
-                    video.status === "ready"
-                      ? "text-green-600"
-                      : "text-yellow-600"
-                  }`}
-                >
-                  {video.status === "ready"
-                    ? "Ready to watch"
-                    : "Processing..."}
-                </p>
               </div>
             </div>
+
           ))}
         </div>
       )}
