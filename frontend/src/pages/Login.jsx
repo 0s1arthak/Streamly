@@ -30,12 +30,12 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600">
+      <div className="bg-white/20 backdrop-blur-lg shadow-2xl rounded-3xl p-8 w-full max-w-md border border-white/30">
+        <h2 className="text-3xl font-bold text-center mb-8 text-white drop-shadow-lg">Login</h2>
 
         <input
-          className="w-full mb-4 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full mb-6 px-4 py-4 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
           type="email"
           name="email"
           placeholder="Email"
@@ -43,7 +43,7 @@ const Login = () => {
         />
 
         <input
-          className="w-full mb-6 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full mb-8 px-4 py-4 bg-white/10 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
           type="password"
           name="password"
           placeholder="Password"
@@ -52,16 +52,16 @@ const Login = () => {
 
         <button
           onClick={handleLogin}
-          className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+          className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg transform hover:scale-105 transition-all duration-300"
         >
           Login
         </button>
 
-        <p className="text-center text-sm mt-4">
+        <p className="text-center text-white/80 mt-6">
           Don’t have an account?{" "}
           <span
             onClick={() => navigate("/signup")}
-            className="text-indigo-600 cursor-pointer hover:underline"
+            className="text-yellow-300 cursor-pointer hover:text-yellow-200 font-semibold hover:underline transition-colors duration-300"
           >
             Sign Up
           </span>

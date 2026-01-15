@@ -27,23 +27,25 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-800 p-6">
       
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="flex justify-between items-center mb-8 bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-white/20">
+        <h1 className="text-3xl font-bold text-white drop-shadow-lg">
+          Dashboard
+        </h1>
 
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <button
             onClick={() => navigate("/upload")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            className="bg-gradient-to-r from-emerald-400 to-cyan-500 hover:from-emerald-500 hover:to-cyan-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg transform hover:scale-105 transition-all duration-300"
           >
-            Upload
+            Upload Video
           </button>
 
           <button
             onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+            className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white px-6 py-3 rounded-full font-semibold shadow-lg transform hover:scale-105 transition-all duration-300"
           >
             Logout
           </button>
@@ -52,28 +54,40 @@ const Dashboard = () => {
 
       {/* Videos Grid */}
       {videos.length === 0 ? (
-        <p className="text-gray-600">No videos uploaded yet</p>
+        <div className="text-center mt-12">
+          <p className="text-white text-xl font-semibold drop-shadow-lg">
+            No videos uploaded yet
+          </p>
+          <p className="text-white/70 mt-2">
+            Start by uploading your first video!
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {videos.map((video) => (
             <div
               key={video._id}
-              className="bg-white rounded shadow hover:shadow-lg transition cursor-pointer"
               onClick={() => navigate(`/watch/${video._id}`)}
+              className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl hover:shadow-indigo-500/20 transform hover:scale-105 transition-all duration-300 cursor-pointer border border-white/20 overflow-hidden"
             >
-              <img
-                src={`http://localhost:5000/${video.thumbnail}`}
-                alt={video.title}
-                className="w-full h-40 object-cover rounded-t"
-              />
+              <div className="relative">
+                <img
+                  src={`http://localhost:5000/${video.thumbnail}`}
+                  alt={video.title}
+                  className="w-full h-48 object-cover rounded-t-2xl"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-t-2xl"></div>
+              </div>
 
-              <div className="p-4">
-                <h3 className="font-semibold text-lg truncate">
+              <div className="p-6">
+                <h3 className="font-bold text-lg text-white truncate drop-shadow-md">
                   {video.title}
                 </h3>
+                <p className="text-white/70 mt-2 text-sm">
+                  Click to watch
+                </p>
               </div>
             </div>
-
           ))}
         </div>
       )}
