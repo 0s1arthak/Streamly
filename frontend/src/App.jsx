@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import PublicRoute from "./routes/PublicRoute";
 import PrivateRoute from "./routes/PrivateRoute";
+import Upload from "./pages/Upload";
 
 function App() {
   return (
@@ -35,6 +36,11 @@ function App() {
             <PrivateRoute>
               <Dashboard />
             </PrivateRoute>
+        }/>
+        <Route path="/upload" element={
+          <PrivateRoute>
+            <Upload/>
+          </PrivateRoute>
         }/>
       </Routes>
     </Router>
