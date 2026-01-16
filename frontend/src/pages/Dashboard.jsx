@@ -11,13 +11,16 @@ const Dashboard = () => {
       try {
         const res = await fetch("http://localhost:5000/api/videos");
         const data = await res.json();
-        setVideos(data);
+        setVideos(data.filter(video => video.status === "ready"));
       } catch (err) {
         console.error("Failed to fetch videos", err);
       }
     };
 
     fetchVideos();
+    const interval = setInterval(fetchVideos, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Logout
