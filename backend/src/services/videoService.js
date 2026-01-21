@@ -2,6 +2,7 @@ import ffmpeg from "fluent-ffmpeg";
 import fs from "fs";
 import path from "path";
 import Video from "../models/Video.js";
+import { deleteCache } from "../utils/cache.js";
 
 // UTIL — Run ffmpeg and return a Promise
 const runFFmpeg = (command) => {
@@ -83,6 +84,8 @@ export const processVideo = async (rawPath, hlsFolder, thumbPath, videoId) => {
         await Video.findByIdAndUpdate(videoId, { status: "ready" });
 
         console.log("Processing finished successfully");
+
+        deleteCache("videos:")
     } catch (err) {
         console.error("Video processing failed:", err);
         await Video.findByIdAndUpdate(videoId, { status: "failed" });
