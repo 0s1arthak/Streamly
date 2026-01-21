@@ -27,10 +27,51 @@ import { processVideo } from "../services/videoService.js";
 
 // Controller will have access to raw path of file using req.file.path
 
+
+// Adding the search+pagination for better effective search and less load 
+// Param	    Meaning	                           Default
+// page	        Which page	                         1
+// limit        Videos per page	                    12
+// search       Search text (title + description)	""
+// GET /api/videos?page=1&limit=12&search=game
 export const videos=async(req,res)=>{
-    const videos=await Video.find().sort({createdAt:-1});
-    console.log(videos);
-    res.json(videos);
+    // const videos=await Video.find().sort({createdAt:-1});
+    // console.log(videos);
+    // res.json(videos);
+
+    try {
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const limit = Math.min(parseInt(req.query.limit) || 8, 50);
+        const search=req.query.search?.trim();
+        const skip=(page-1)*limit;
+
+        const filter={
+            status:"ready",
+        };
+        if(search){
+            filter.$text={$search:search};
+        }
+
+        const [videos,total]=await Promise.all([
+            Video.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+
+        Video.countDocuments(filter),
+        ])
+        res.json({
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        videos,
+        });
+    } catch (error) {
+        res.status(500).json({message:error.message});
+        
+    }
 }
 
 
