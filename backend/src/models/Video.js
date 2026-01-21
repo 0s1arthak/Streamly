@@ -22,4 +22,13 @@ const videoSchema=new mongoose.Schema({
 
 },{ timestamps: true })
 
+
+
+// For searching we are using index on title and description
+
+videoSchema.index({
+    title:"text",
+    description:"text",
+});
+
 export default mongoose.model("Video",videoSchema);
