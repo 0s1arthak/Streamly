@@ -30,6 +30,10 @@ The repository implements a secure signup flow using email OTPs and prepares the
 - **Master playlist generation**: Creates adaptive bitrate streaming manifest (`master.m3u8`) for quality adaptation
 - **Thumbnail generation**: Automatic snapshot extraction from uploaded videos at 50% mark
 - **Video retrieval**: Endpoints to fetch all videos and individual video details by ID
+- **Polling mechanism**: Frontend polls for video processing status updates
+- **Search and pagination**: Videos can be searched by title/description and paginated for efficient loading
+- **In-memory caching**: Video lists are cached to reduce database load and improve response times
+- **Rate limiting**: API endpoints and upload routes are protected with rate limits to prevent abuse
 
 ### 🔧 Backend Infrastructure
 - Express.js server with CORS and JSON parsing
@@ -38,6 +42,8 @@ The repository implements a secure signup flow using email OTPs and prepares the
 - Email provider using Nodemailer
 - File upload handling with multer middleware
 - Authentication middleware for protected routes
+- Rate limiting middleware for API protection
+- In-memory caching utility for performance optimization
 
 ### 📁 Upload & Storage (Implemented)
 - **Raw uploads**: `uploads/raw/` - stores original uploaded video files
@@ -64,23 +70,26 @@ streamly/
 │   │   ├── config/db.js           # MongoDB connection
 │   │   ├── controllers/
 │   │   │   ├── authController.js  # Signup, verifyOtp, resendOtp
-│   │   │   └── videoController.js # Video handling (WIP)
+│   │   │   └── videoController.js # Video handling with caching, search, pagination
 │   │   ├── middleware/
 │   │   │   ├── authmiddleware.js  # JWT verification (used by protected routes)
-│   │   │   └── upload.js          # File upload handling (scaffold)
+│   │   │   ├── upload.js          # File upload handling
+│   │   │   └── rateLimiter.js     # Rate limiting for API protection
 │   │   ├── models/
 │   │   │   ├── User.js            # User schema
 │   │   │   ├── Otp.js             # OTP schema
 │   │   │   ├── TempUser.js        # Temporary signup storage
-│   │   │   └── Video.js           # Video schema (empty / WIP)
+│   │   │   └── Video.js           # Video schema with metadata
 │   │   ├── providers/
 │   │   │   └── email.provider.js  # Email sending logic
 │   │   ├── routes/
 │   │   │   ├── authRoutes.js      # Auth endpoints (signup, verifyOtp, resendOtp)
-│   │   │   └── videoRoutes.js     # Video endpoints (WIP)
+│   │   │   └── videoRoutes.js     # Video endpoints with search/pagination
 │   │   ├── services/
-│   │   │   └── otpService.js      # OTP generation & sending
+│   │   │   ├── otpService.js      # OTP generation & sending
+│   │   │   └── videoService.js    # Video processing with FFmpeg/HLS
 │   │   └── utils/
+│   │       ├── cache.js           # In-memory caching utility
 │   │       ├── generateToken.js   # JWT token creation
 │   │       ├── hash.js            # Hash utilities for OTP
 │   │       └── random.js          # Random generation utilities
@@ -202,8 +211,9 @@ npm run dev
   - Response: `{ message: "Uploaded. Processing started.", video }`
   - Processing: Video is converted to HLS (360p, 480p, 720p), thumbnail is generated, and master playlist is created
 
-- `GET /` — retrieve all videos
-  - Response: Array of video objects sorted by creation date (newest first)
+- `GET /` — retrieve all videos with optional search and pagination
+  - Query params: `page` (default 1), `limit` (default 8, max 50), `search` (string for title/description)
+  - Response: `{ page, limit, total, totalPages, videos }`
 
 - `GET /:id` — retrieve a specific video by ID
   - Response: `{ video: {...} }`
@@ -239,12 +249,15 @@ npm run dev
 - Video watch page with HLS player integration (hls.js)
 - Tailwind CSS integration for consistent styling
 - Public and private route components for conditional access
+- Search and pagination for video listing
+- In-memory caching for video retrieval
+- Rate limiting for API and upload routes
+- Polling mechanism for video processing status
+- Enhanced authentication UI and user experience
 
 ### 🚧 In Progress
 - User profile management
 - Video deletion and editing capabilities
-- Search and filtering functionality
-- User dashboard showing uploaded videos
 
 ### 📋 Planned
 - Social features (comments, likes, shares)
@@ -278,6 +291,9 @@ FRONTEND_URL
 - HLS segments are stored on disk in `uploads/hls/{videoId}/` directory structure for efficient streaming.
 - FFmpeg encoding produces `.ts` (transport stream) segment files and `.m3u8` playlist manifests for each quality level.
 - Video playback is implemented using hls.js for cross-browser HLS streaming support, with fallback for Safari's native HLS player.
+- In-memory caching is used for video lists to improve performance; cache is invalidated on new uploads.
+- Rate limiting protects against abuse; adjust limits in `rateLimiter.js` as needed.
+- Search uses MongoDB text indexes for efficient querying of title and description fields.
 
 ## Video Processing Details
 
@@ -314,17 +330,12 @@ ISC
 
 ---
 
-**Last Updated**: January 15, 2026  
+**Last Updated**: January 21, 2026  
 **Current Branch**: `feat/Authentication`
 
 ### Recent Commits
-- feat: add Watch page for video playback and integrate video fetching logic
-- feat: implement video upload feature with form handling and navigation
-- feat: integrate Tailwind CSS and refactor styles across components
-- Update README.md: Enhance authentication and video processing features, clarify implementation status and API endpoints
-- Implement video processing functionality: add video upload, retrieval, and processing services with HLS support
-- Update README.md: Enhance project overview and features for authentication system
-- Implement video upload functionality with multer, add video model and routes, and enhance authentication with public/private route handling
-- add logout functionality
-- Implement login functionality, add basic routing for Home, Signup, Login, Verify OTP, and Dashboard pages
-- Add README.md with project overview, features, setup instructions, and tech stack details
+- feat: implement in-memory caching for video retrieval and processing
+- feat: implement search and pagination for video listing in Dashboard
+- feat: implement rate limiting for API and upload routes
+- feat: update video fetching logic to filter for ready status and add polling mechanism and removed uploads
+- feat: enhance authentication UI and improve user experience across pages
