@@ -3,6 +3,7 @@ import ffmpeg from "fluent-ffmpeg"
 import path from "path"
 import fs from "fs"
 import { processVideo } from "../services/videoService.js";
+import { getCache,setCache,deleteCache } from "../utils/cache.js";
 
 // We will go step by step first we will only upload video and create a record in db for that video 
 // Always keep in mind when we are saying we are saving video in db , it only means that we are storing
@@ -45,6 +46,14 @@ export const videos=async(req,res)=>{
         const search=req.query.search?.trim();
         const skip=(page-1)*limit;
 
+
+        const cacheKey=`videos:${page}:${limit}:${search || ""}`
+        const cached=getCache(cacheKey);
+        if(cached){
+            console.log("videos served from cache");
+            return res.json(cached)
+        }
+
         const filter={
             status:"ready",
         };
@@ -61,13 +70,15 @@ export const videos=async(req,res)=>{
 
         Video.countDocuments(filter),
         ])
-        res.json({
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        videos,
-        });
+        const response = {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+            videos,
+        };
+        setCache(cacheKey, response, 60);
+        res.json(response);
     } catch (error) {
         res.status(500).json({message:error.message});
         
