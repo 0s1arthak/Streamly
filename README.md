@@ -1,15 +1,15 @@
  # Streamly
 
-A video streaming platform in active development. The project currently focuses on a secure, OTP-based authentication flow and scaffolding for video upload and HLS streaming.
+A video streaming platform in active development. The project currently focuses on a secure, OTP-based authentication flow and asynchronous video upload processing with Bull MQ for scalable background jobs.
 
 ## Project Overview
 
 Streamly is a full-stack video streaming application built with:
 - **Frontend**: React with Vite
-- **Backend**: Express.js with MongoDB
+- **Backend**: Express.js with MongoDB and Redis
 - **Current Branch**: `feat/Authentication`
 
-The repository implements a secure signup flow using email OTPs and prepares the backend for video processing (FFmpeg/HLS).
+The repository implements a secure signup flow using email OTPs and asynchronous video processing with Bull MQ for efficient handling of resource-intensive tasks.
 
 ## Features (Current Status)
 
@@ -25,6 +25,7 @@ The repository implements a secure signup flow using email OTPs and prepares the
 
 ### ✅ Video Upload & Processing (Implemented)
 - **Video upload**: Users upload video files which are stored in `uploads/raw/` and indexed in MongoDB
+- **Asynchronous processing**: Video processing is handled via Bull MQ message queue for non-blocking uploads
 - **Video metadata**: Video records store title, description, user reference, thumbnail path, HLS stream URL, and processing status
 - **HLS streaming**: Videos are automatically converted to multiple quality levels (360p, 480p, 720p) using FFmpeg
 - **Master playlist generation**: Creates adaptive bitrate streaming manifest (`master.m3u8`) for quality adaptation
@@ -38,6 +39,8 @@ The repository implements a secure signup flow using email OTPs and prepares the
 ### 🔧 Backend Infrastructure
 - Express.js server with CORS and JSON parsing
 - MongoDB (Mongoose) connection and models
+- Redis for message queuing and caching
+- Bull MQ for asynchronous job processing
 - Environment configuration with `dotenv`
 - Email provider using Nodemailer
 - File upload handling with multer middleware
@@ -67,7 +70,9 @@ streamly/
 ├── backend/
 │   ├── src/
 │   │   ├── server.js              # Main Express server
-│   │   ├── config/db.js           # MongoDB connection
+│   │   ├── config/
+│   │   │   ├── db.js              # MongoDB connection
+│   │   │   └── redis.js           # Redis connection for Bull MQ
 │   │   ├── controllers/
 │   │   │   ├── authController.js  # Signup, verifyOtp, resendOtp
 │   │   │   └── videoController.js # Video handling with caching, search, pagination
@@ -82,17 +87,21 @@ streamly/
 │   │   │   └── Video.js           # Video schema with metadata
 │   │   ├── providers/
 │   │   │   └── email.provider.js  # Email sending logic
+│   │   ├── queues/
+│   │   │   └── videoQueue.js      # Bull MQ queue for video processing jobs
 │   │   ├── routes/
 │   │   │   ├── authRoutes.js      # Auth endpoints (signup, verifyOtp, resendOtp)
 │   │   │   └── videoRoutes.js     # Video endpoints with search/pagination
 │   │   ├── services/
 │   │   │   ├── otpService.js      # OTP generation & sending
 │   │   │   └── videoService.js    # Video processing with FFmpeg/HLS
-│   │   └── utils/
-│   │       ├── cache.js           # In-memory caching utility
-│   │       ├── generateToken.js   # JWT token creation
-│   │       ├── hash.js            # Hash utilities for OTP
-│   │       └── random.js          # Random generation utilities
+│   │   ├── utils/
+│   │   │   ├── cache.js           # In-memory caching utility
+│   │   │   ├── generateToken.js   # JWT token creation
+│   │   │   ├── hash.js            # Hash utilities for OTP
+│   │   │   └── random.js          # Random generation utilities
+│   │   └── workers/
+│   │       └── videoWorker.js     # Bull MQ worker for processing video jobs
 │   ├── uploads/
 │   │   ├── raw/                   # Raw uploaded video files
 │   │   ├── hls/                   # HLS-encoded output
@@ -127,6 +136,8 @@ streamly/
 - **Node.js** (ES Modules)
 - **Express.js**
 - **MongoDB** with Mongoose
+- **Redis** with IORedis
+- **Bull MQ** for job queuing
 - **bcrypt** for password hashing
 - **jsonwebtoken** for auth tokens
 - **nodemailer** for sending OTP emails
@@ -142,6 +153,7 @@ streamly/
 ### Prerequisites
 - Node.js (v16+ recommended)
 - MongoDB connection string
+- Redis server (local or cloud)
 - SMTP credentials (for email OTPs)
 
 ### Backend
@@ -158,6 +170,8 @@ npm install
 ```
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
 SALT_ROUNDS=10
 JWT_SECRET=your_jwt_secret
 EMAIL_USER=your_email@example.com
@@ -209,7 +223,7 @@ npm run dev
   - Headers: `Authorization: Bearer {token}`
   - Body: FormData with `title`, `description`, and video file
   - Response: `{ message: "Uploaded. Processing started.", video }`
-  - Processing: Video is converted to HLS (360p, 480p, 720p), thumbnail is generated, and master playlist is created
+  - Processing: Video upload is queued for asynchronous processing with Bull MQ; video is converted to HLS (360p, 480p, 720p), thumbnail is generated, and master playlist is created in the background
 
 - `GET /` — retrieve all videos with optional search and pagination
   - Query params: `page` (default 1), `limit` (default 8, max 50), `search` (string for title/description)
@@ -239,6 +253,7 @@ npm run dev
 - User logout functionality
 - Video model with metadata fields (title, description, thumbnail, videoUrl, status)
 - Video upload with multer middleware
+- Asynchronous video processing with Bull MQ and Redis
 - HLS streaming with multi-quality encoding (360p, 480p, 720p)
 - Automatic thumbnail generation from videos
 - Master playlist creation for adaptive bitrate streaming
@@ -272,6 +287,8 @@ Required:
 ```
 PORT
 MONGODB_URI
+REDIS_HOST
+REDIS_PORT
 SALT_ROUNDS
 JWT_SECRET
 EMAIL_USER
@@ -287,29 +304,36 @@ FRONTEND_URL
 ## Notes & Next Steps
 
 - The authentication implementation expects the frontend to store the signup email (e.g., in component state or localStorage) so the OTP page can send the email + OTP for verification.
-- Video processing happens asynchronously after upload confirmation. The client receives an immediate response with `status: "processing"`.
+- Video processing happens asynchronously via Bull MQ after upload confirmation. The client receives an immediate response with `status: "processing"`, and processing occurs in the background worker.
 - HLS segments are stored on disk in `uploads/hls/{videoId}/` directory structure for efficient streaming.
 - FFmpeg encoding produces `.ts` (transport stream) segment files and `.m3u8` playlist manifests for each quality level.
 - Video playback is implemented using hls.js for cross-browser HLS streaming support, with fallback for Safari's native HLS player.
 - In-memory caching is used for video lists to improve performance; cache is invalidated on new uploads.
 - Rate limiting protects against abuse; adjust limits in `rateLimiter.js` as needed.
 - Search uses MongoDB text indexes for efficient querying of title and description fields.
+- Bull MQ ensures scalable video processing; Redis stores job queues and handles retries on failures.
 
 ## Video Processing Details
 
-### HLS Encoding Flow
+### Asynchronous Processing with Bull MQ
 1. User uploads a video file → stored in `uploads/raw/`
-2. Backend generates a unique `videoId` (timestamp-based) for organization
-3. FFmpeg processes the video to create three quality variants:
+2. Backend creates a video record with `status: "processing"` and adds a job to the Bull MQ queue
+3. Bull MQ worker picks up the job and processes the video asynchronously
+4. Processing includes HLS encoding, thumbnail generation, and status updates
+5. Frontend polls for status updates until processing completes
+
+### HLS Encoding Flow
+1. Worker generates a unique `videoId` (timestamp-based) for organization
+2. FFmpeg processes the video to create three quality variants:
    - **360p** (640×360) → bandwidth ~800 kbps
    - **480p** (854×480) → bandwidth ~1400 kbps
    - **720p** (1280×720) → bandwidth ~2800 kbps
-4. Each quality produces:
+3. Each quality produces:
    - `.m3u8` playlist file (manifest)
    - Multiple `.ts` segment files (6-second chunks)
-5. A `master.m3u8` file is created for adaptive bitrate streaming
-6. Thumbnail is extracted at the 50% mark of the video
-7. All metadata is saved to the `Video` model with status `"completed"`
+4. A `master.m3u8` file is created for adaptive bitrate streaming
+5. Thumbnail is extracted at the 50% mark of the video
+6. All metadata is saved to the `Video` model with status `"ready"`
 
 ### Example Video Upload Request
 ```bash
@@ -330,10 +354,11 @@ ISC
 
 ---
 
-**Last Updated**: January 21, 2026  
+**Last Updated**: January 22, 2026  
 **Current Branch**: `feat/Authentication`
 
 ### Recent Commits
+- feat: implement Bull MQ for asynchronous video processing with Redis
 - feat: implement in-memory caching for video retrieval and processing
 - feat: implement search and pagination for video listing in Dashboard
 - feat: implement rate limiting for API and upload routes
