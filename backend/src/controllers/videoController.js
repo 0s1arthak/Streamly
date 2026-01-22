@@ -4,6 +4,7 @@ import path from "path"
 import fs from "fs"
 import { processVideo } from "../services/videoService.js";
 import { getCache,setCache,deleteCache } from "../utils/cache.js";
+import { videoQueue } from "../queues/videoQueue.js";
 
 // We will go step by step first we will only upload video and create a record in db for that video 
 // Always keep in mind when we are saying we are saving video in db , it only means that we are storing
@@ -122,7 +123,13 @@ export const uploadVideo=async(req,res)=>{
         })
 
         // Process the video using service
-        processVideo(rawPath,hlsFolder,thumbPath,newVideo._id);
+        // processVideo(rawPath,hlsFolder,thumbPath,newVideo._id);
+        await videoQueue.add("process-video",{
+            rawPath,
+            hlsFolder,
+            thumbPath,
+            videoId:newVideo._id.toString(),
+        });
 
         return res.status(200).json({message:"Uploaded. Processing started.",video:newVideo});
     } catch (error) {
