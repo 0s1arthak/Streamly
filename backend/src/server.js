@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js"
 import videoRoutes from "./routes/videoRoutes.js"
 import path from "path"
 import { apiLimiter } from "./middleware/rateLimiter.js"
+import "./workers/videoWorker.js";
 
 
 dotenv.config()
