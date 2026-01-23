@@ -41,7 +41,7 @@ const Upload = () => {
         throw new Error(data.message || "Upload failed");
       }
 
-      navigate("/dashboard");
+      navigate("/dashboard", { state: { refresh: true } });
     } catch (err) {
       if (err.message === "Unauthorized") {
         localStorage.removeItem("token");

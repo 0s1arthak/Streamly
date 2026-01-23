@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const LIMIT = 8;
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [videos, setVideos] = useState([]);
   const [page, setPage] = useState(1);
@@ -40,6 +41,15 @@ const Dashboard = () => {
   useEffect(() => {
     fetchVideos();
   }, [page, search]);
+
+  // Check for refresh state from navigation (e.g., after upload)
+  useEffect(() => {
+    if (location.state?.refresh) {
+      fetchVideos();
+      // Clear the state to prevent re-fetching on subsequent renders
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
